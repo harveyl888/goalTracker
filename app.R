@@ -27,6 +27,9 @@ df.sub <- dbReadTable(db, 'subGoals')
 
 server <- function(input, output) {
 
+  ## main and subgoal data frames are reactive
+  goals <- reactiveValues(main = df.main, sub = df.sub)
+  
   shinyInput <- function(FUN, len, id, ...) {
     inputs <- character(len)
     for (i in seq_len(len)) {
@@ -35,9 +38,24 @@ server <- function(input, output) {
     inputs
   }
 
-  ## main and subgoal data frames are reactive
-  goals <- reactiveValues(main = df.main, sub = df.sub)
+  ## Determine next main goal reference number
+  nextMainRef <- function() {
+    if (nrow(goals$main) == 0) {
+      return(1)
+    } else {
+      return(max(goals$main$refMain) + 1)
+    }
+  }
   
+  ## Determine next sub goal reference number
+  nextSubRef <- function() {
+    if (nrow(goals$sub) == 0) {
+      return(1)
+    } else {
+      return(max(goals$sub$refSub) + 1)
+    }
+  }
+
   ## Add main goal modal window
   observeEvent(input$butAddMain, {
     showModal(modalDialog(
@@ -49,7 +67,9 @@ server <- function(input, output) {
   
   ## main goal added - update table
   observeEvent(input$butMainConfirm, {
-    goals$main[nrow(goals$main) + 1, ] <- input$txtMainName
+    goals$main <- rbind(goals$main, data.frame(refMain = nextMainRef(),
+                                               name = input$txtMainName,
+                                               stringsAsFactors = FALSE))
     removeModal()
   })
   
@@ -75,13 +95,31 @@ server <- function(input, output) {
     showModal(modalDialog(
       title = "Add Sub Goal",
       div(style='display:inline-block; vertical-align:middle;', textInput('txtSubName', 'Name')),
-      div(style='display:inline-block; vertical-align:middle;', actionButton('butSubConfirm', 'Add', class = 'btn action-button btn-success'))
+      div(style='display:inline-block; vertical-align:middle;', actionButton('butSubConfirm', 'Add', class = 'btn action-button btn-success')),
+      checkboxInput('chkTimebound', 'Time Bound?'),
+      conditionalPanel('input.chkTimebound == true',
+                       wellPanel(
+                         dateInput('dateStart', 'Start Date'),
+                         dateInput('dateEnd', 'End Date')
+                       )
+                       )
     ))
   })
   
   ## sub goal added - update table
   observeEvent(input$butSubConfirm, {
-    goals$sub[nrow(goals$sub) + 1, ] <- input$txtSubName
+    mainGoalRef <- goals$main[input$tabMainGoals_rows_selected, 'refMain']
+    if(input$chkTimebound == TRUE) {
+      goalDates <- c(input$dateStart, input$dateEnd)
+    } else {
+      goalDates <- c(NA, NA)
+    }
+    goals$sub <- rbind(goals$sub, data.frame(refSub = nextSubRef(),
+                                             refMain = mainGoalRef,
+                                             name = input$txtSubName,
+                                             start = goalDates[1],
+                                             end = goalDates[2],
+                                             stringsAsFactors = FALSE))
     removeModal()
   })
   
