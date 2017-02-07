@@ -38,6 +38,7 @@ server <- function(input, output) {
   ## main and subgoal data frames are reactive
   goals <- reactiveValues(main = df.main, sub = df.sub)
   
+  ## Add main goal modal window
   observeEvent(input$butAddMain, {
     showModal(modalDialog(
       title = "Add Main Goal",
@@ -55,7 +56,7 @@ server <- function(input, output) {
   ## table of main goals
   output$tabMainGoals <- DT::renderDataTable({
     req(nrow(goals$main) > 0)
-    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$main), 'delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"delete_button\", this.id)'),
+    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$main), 'main_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"main_delete_button\", this.id)'),
                          goals$main,
                          stringsAsFactors = FALSE)
     DT::datatable(df.out, escape = FALSE, selection = 'single'
@@ -63,9 +64,41 @@ server <- function(input, output) {
   }, server = FALSE)
   
   ## main goal deleted
-  observeEvent(input$delete_button, {
-    selectedRow <- as.numeric(strsplit(input$delete_button, "_")[[1]][2])
+  observeEvent(input$main_delete_button, {
+    selectedRow <- as.numeric(strsplit(input$main_delete_button, "_")[[1]][3])
     goals$main <- goals$main %>% 
+      slice(-selectedRow)
+  })
+  
+  ## Add sub goal modal window
+  observeEvent(input$butAddSub, {
+    showModal(modalDialog(
+      title = "Add Sub Goal",
+      div(style='display:inline-block; vertical-align:middle;', textInput('txtSubName', 'Name')),
+      div(style='display:inline-block; vertical-align:middle;', actionButton('butSubConfirm', 'Add', class = 'btn action-button btn-success'))
+    ))
+  })
+  
+  ## sub goal added - update table
+  observeEvent(input$butSubConfirm, {
+    goals$sub[nrow(goals$sub) + 1, ] <- input$txtSubName
+    removeModal()
+  })
+  
+  ## table of sub goals
+  output$tabSubGoals <- DT::renderDataTable({
+    req(nrow(goals$sub) > 0)
+    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$sub), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", this.id)'),
+                         goals$sub,
+                         stringsAsFactors = FALSE)
+    DT::datatable(df.out, escape = FALSE, selection = 'single'
+    )
+  }, server = FALSE)
+  
+  ## sub goal deleted
+  observeEvent(input$sub_delete_button, {
+    selectedRow <- as.numeric(strsplit(input$sub_delete_button, "_")[[1]][3])
+    goals$sub <- goals$sub %>% 
       slice(-selectedRow)
   })
   
@@ -76,8 +109,11 @@ ui <- fluidPage(
   SXPanel('panMainGoals', heading = 'Main Goals', text_size = 'large', styleclass = 'success',
           actionButton('butAddMain', 'Add', class = 'btn action-button btn-success'),
           DT::dataTableOutput('tabMainGoals')
-          )
-  
+          ),
+  SXPanel('panSubGoals', heading = 'Sub Goals', text_size = 'large', styleclass = 'info',
+          actionButton('butAddSub', 'Add', class = 'btn action-button btn-success'),
+          DT::dataTableOutput('tabSubGoals')
+  )
 )
 
 shinyApp(ui = ui, server = server)
