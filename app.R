@@ -12,8 +12,8 @@ library(DT)
 
 createDB <- function() {
   db <- dbConnect(SQLite(), dbname='goals.sqlite')
-  dbSendQuery(db,'CREATE TABLE mainGoals (name TEXT)')
-  dbSendQuery(db,'CREATE TABLE subGoals (name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
+  dbSendQuery(db,'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
+  dbSendQuery(db,'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
   dbDisconnect(db)
 }
 
