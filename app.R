@@ -28,7 +28,7 @@ df.sub <- dbReadTable(db, 'subGoals')
 server <- function(input, output) {
 
   ## main and subgoal data frames are reactive
-  goals <- reactiveValues(main = df.main, sub = df.sub)
+  goals <- reactiveValues(main = df.main, sub = df.sub, subFiltered = NULL)
   
   shinyInput <- function(FUN, len, id, ...) {
     inputs <- character(len)
@@ -119,15 +119,22 @@ server <- function(input, output) {
                                              name = input$txtSubName,
                                              start = goalDates[1],
                                              end = goalDates[2],
+                                             percentComplete = 0,
                                              stringsAsFactors = FALSE))
     removeModal()
   })
   
+  ## filtered sub goal table
+  observe({
+    mainGoalRef <- goals$main[input$tabMainGoals_rows_selected, 'refMain']
+    goals$subFiltered <- goals$sub[goals$sub$refMain == mainGoalRef, ]
+  })
+  
   ## table of sub goals
   output$tabSubGoals <- DT::renderDataTable({
-    req(nrow(goals$sub) > 0)
-    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$sub), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", this.id)'),
-                         goals$sub,
+    req(nrow(goals$subFiltered) > 0)
+    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$subFiltered), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", this.id)'),
+                         goals$subFiltered,
                          stringsAsFactors = FALSE)
     DT::datatable(df.out, escape = FALSE, selection = 'single'
     )
@@ -136,8 +143,9 @@ server <- function(input, output) {
   ## sub goal deleted
   observeEvent(input$sub_delete_button, {
     selectedRow <- as.numeric(strsplit(input$sub_delete_button, "_")[[1]][3])
+    selectedRef <- goals$subFiltered[selectedRow, 'refSub']
     goals$sub <- goals$sub %>% 
-      slice(-selectedRow)
+      filter(refSub != selectedRef)
   })
   
 }
