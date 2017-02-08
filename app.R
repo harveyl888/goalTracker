@@ -86,8 +86,35 @@ server <- function(input, output) {
   ## main goal deleted
   observeEvent(input$main_delete_button, {
     selectedRow <- as.numeric(strsplit(input$main_delete_button, "_")[[1]][3])
+    mainGoalRef <- goals$main[selectedRow, 'refMain']
+    subGoalCount <- nrow(goals$sub %>% filter(refMain == mainGoalRef))
+    if (subGoalCount > 0) {  ## warn on deletion
+      showModal(modalDialog(
+        title = "Delete Main Goal",
+        h4(paste0('Deleting this goal also deletes ', subGoalCount, ' sub-goal', ifelse(subGoalCount == 1, '', 's'))),
+        actionButton('butMainDeleteOK', 'OK', class = 'btn action-button btn-success'),
+        actionButton('butMainDeleteCancel', 'Cancel', class = 'btn action-button btn-danger')
+      ))
+    } else {
+      goals$main <- goals$main %>% 
+        slice(-selectedRow)
+    }
+  })
+  
+  ## confirm main goal deletion
+  observeEvent(input$butMainDeleteOK, {
+    removeModal()
+    selectedRow <- as.numeric(strsplit(input$main_delete_button, "_")[[1]][3])
+    mainGoalRef <- goals$main[selectedRow, 'refMain']
     goals$main <- goals$main %>% 
       slice(-selectedRow)
+    goals$sub <- goals$sub %>%
+      filter(refMain != mainGoalRef)
+  })
+  
+  ## cancel main goal deletion
+  observeEvent(input$butMainDeleteCancel, {
+    removeModal()
   })
   
   ## Add sub goal modal window
@@ -148,6 +175,8 @@ server <- function(input, output) {
       filter(refSub != selectedRef)
   })
   
+  output$t1 <- renderTable(goals$main)
+  output$t2 <- renderTable(goals$sub)
 }
 
 ui <- fluidPage(
@@ -159,6 +188,10 @@ ui <- fluidPage(
   SXPanel('panSubGoals', heading = 'Sub Goals', text_size = 'large', styleclass = 'info',
           actionButton('butAddSub', 'Add', class = 'btn action-button btn-success'),
           DT::dataTableOutput('tabSubGoals')
+  ),
+  fluidRow(
+    column(6, tableOutput('t1')),
+    column(6, tableOutput('t2'))
   )
 )
 
