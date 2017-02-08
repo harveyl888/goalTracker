@@ -79,8 +79,13 @@ server <- function(input, output) {
     df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$main), 'main_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"main_delete_button\", this.id)'),
                          goals$main,
                          stringsAsFactors = FALSE)
-    DT::datatable(df.out, escape = FALSE, selection = 'single'
-    )
+    DT::datatable(df.out, escape = FALSE, selection = 'single', options = list(dom = 'tp'),
+                                                                               callback = JS('
+                                                                                  table.on("click.dt", "tbody td button", function(e) {
+                                                                                    e.stopPropagation();
+                                                                                  });
+                                                                               ')
+                  )
   }, server = FALSE)
   
   ## main goal deleted
@@ -163,8 +168,13 @@ server <- function(input, output) {
     df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$subFiltered), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", this.id)'),
                          goals$subFiltered,
                          stringsAsFactors = FALSE)
-    DT::datatable(df.out, escape = FALSE, selection = 'single'
-    )
+    DT::datatable(df.out, escape = FALSE, selection = 'single', options = list(dom = 'tp'),
+                                                                               callback = JS('
+                                                                                  table.on("click.dt", "tbody td button", function(e) {
+                                                                                    e.stopPropagation();
+                                                                                  });
+                                                                                ')
+                  )
   }, server = FALSE)
   
   ## sub goal deleted
