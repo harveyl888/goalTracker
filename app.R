@@ -76,7 +76,7 @@ server <- function(input, output) {
   ## table of main goals
   output$tabMainGoals <- DT::renderDataTable({
     req(nrow(goals$main) > 0)
-    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$main), 'main_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"main_delete_button\", this.id)'),
+    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$main), 'main_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"main_delete_button\", [this.id, Math.random()])'),
                          goals$main,
                          stringsAsFactors = FALSE)
     DT::datatable(df.out, escape = FALSE, selection = 'single', options = list(dom = 'tp'),
@@ -90,7 +90,7 @@ server <- function(input, output) {
   
   ## main goal deleted
   observeEvent(input$main_delete_button, {
-    selectedRow <- as.numeric(strsplit(input$main_delete_button, "_")[[1]][3])
+    selectedRow <- as.numeric(strsplit(input$main_delete_button[1], "_")[[1]][3])
     mainGoalRef <- goals$main[selectedRow, 'refMain']
     subGoalCount <- nrow(goals$sub %>% filter(refMain == mainGoalRef))
     if (subGoalCount > 0) {  ## warn on deletion
@@ -165,7 +165,7 @@ server <- function(input, output) {
   ## table of sub goals
   output$tabSubGoals <- DT::renderDataTable({
     req(nrow(goals$subFiltered) > 0)
-    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$subFiltered), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", this.id)'),
+    df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$subFiltered), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", [this.id, Math.random()])'),
                          goals$subFiltered,
                          stringsAsFactors = FALSE)
     DT::datatable(df.out, escape = FALSE, selection = 'single', options = list(dom = 'tp'),
@@ -179,7 +179,7 @@ server <- function(input, output) {
   
   ## sub goal deleted
   observeEvent(input$sub_delete_button, {
-    selectedRow <- as.numeric(strsplit(input$sub_delete_button, "_")[[1]][3])
+    selectedRow <- as.numeric(strsplit(input$sub_delete_button[1], "_")[[1]][3])
     selectedRef <- goals$subFiltered[selectedRow, 'refSub']
     goals$sub <- goals$sub %>% 
       filter(refSub != selectedRef)
