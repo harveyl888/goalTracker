@@ -110,7 +110,7 @@ server <- function(input, output) {
   observeEvent(input$butSubConfirm, {
     mainGoalRef <- goals$main[input$tabMainGoals_rows_selected, 'refMain']
     if(input$chkTimebound == TRUE) {
-      goalDates <- c(input$dateStart, input$dateEnd)
+      goalDates <- c(as.character(input$dateStart), as.character(input$dateEnd))
     } else {
       goalDates <- c(NA, NA)
     }
