@@ -80,6 +80,7 @@ server <- function(input, output, session) {
   output$tabMainGoals <- DT::renderDataTable({
     req(nrow(goals$main) > 0)
     df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$main), 'main_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"main_delete_button\", [this.id, Math.random()])'),
+                         Edit = shinyInput(actionButton, nrow(goals$main), 'main_editbut_', label = 'Edit', onclick = 'Shiny.onInputChange(\"main_edit_button\", [this.id, Math.random()])'),
                          goals$main,
                          stringsAsFactors = FALSE)
     DT::datatable(df.out, escape = FALSE, selection = 'single', options = list(dom = 'tp'),
@@ -122,6 +123,23 @@ server <- function(input, output, session) {
   
   ## cancel main goal deletion
   observeEvent(input$butMainDeleteCancel, {
+    removeModal()
+  })
+  
+  ## main goal edit
+  observeEvent(input$main_edit_button, {
+    selectedRow <- as.numeric(strsplit(input$main_edit_button[1], "_")[[1]][3])
+    showModal(modalDialog(
+      title = "Edit Main Goal",
+      div(style='display:inline-block; vertical-align:middle;', textInput('txtMainNameEdit', 'Name', value = goals$main[selectedRow, 'name'])),
+      div(style='display:inline-block; vertical-align:middle;', actionButton('butMainConfirmEdit', 'OK', class = 'btn action-button btn-success'))
+    ))
+  })
+  
+  ## confirm main goal edit
+  observeEvent(input$butMainConfirmEdit, {
+    selectedRow <- as.numeric(strsplit(input$main_edit_button[1], "_")[[1]][3])
+    goals$main[selectedRow, 'name'] <- input$txtMainNameEdit
     removeModal()
   })
   
@@ -169,6 +187,7 @@ server <- function(input, output, session) {
   output$tabSubGoals <- DT::renderDataTable({
     req(nrow(goals$subFiltered) > 0)
     df.out <- data.frame(Delete = shinyInput(actionButton, nrow(goals$subFiltered), 'sub_delbut_', label = 'Delete', onclick = 'Shiny.onInputChange(\"sub_delete_button\", [this.id, Math.random()])'),
+                         Edit = shinyInput(actionButton, nrow(goals$subFiltered), 'sub_editbut_', label = 'Edit', onclick = 'Shiny.onInputChange(\"sub_edit_button\", [this.id, Math.random()])'),
                          goals$subFiltered,
                          stringsAsFactors = FALSE)
     DT::datatable(df.out, escape = FALSE, selection = 'single', options = list(dom = 'tp'),
@@ -187,6 +206,40 @@ server <- function(input, output, session) {
     goals$sub <- goals$sub %>% 
       filter(refSub != selectedRef)
   })
+  
+  ## sub goal edit
+  observeEvent(input$sub_edit_button, {
+    selectedRow <- as.numeric(strsplit(input$sub_edit_button[1], "_")[[1]][3])
+    selectedRef <- goals$subFiltered[selectedRow, 'refSub']
+    subRow <- which(goals$sub$refSub == selectedRef)
+    showModal(modalDialog(
+      title = "Edit Sub Goal",
+      div(style='display:inline-block; vertical-align:middle;', textInput('txtSubNameEdit', 'Name', value = goals$sub[subRow, 'name'])),
+      div(style='display:inline-block; vertical-align:middle;', actionButton('butSubConfirmEdit', 'OK', class = 'btn action-button btn-success')),
+      checkboxInput('chkTimeboundEdit', 'Time Bound?'),
+      conditionalPanel('input.chkTimeboundEdit == true',
+                       wellPanel(
+                         dateInput('dateStartEdit', 'Start Date', value = goals$sub[subRow, 'start']),
+                         dateInput('dateEndEdit', 'End Date', value = goals$sub[subRow, 'end'])
+                       )
+      )
+    ))
+  })
+  
+  ## confirm sub goal edit
+  observeEvent(input$butSubConfirmEdit, {
+    selectedRow <- as.numeric(strsplit(input$sub_edit_button[1], "_")[[1]][3])
+    selectedRef <- goals$subFiltered[selectedRow, 'refSub']
+    subRow <- which(goals$sub$refSub == selectedRef)
+    if(input$chkTimeboundEdit == TRUE) {
+      goalDates <- c(as.character(input$dateStartEdit), as.character(input$dateEndEdit))
+    } else {
+      goalDates <- c(NA, NA)
+    }
+    goals$sub[subRow, c(3, 4, 5)] <- c(input$txtSubNameEdit, goalDates[1], goalDates[2])
+    removeModal()
+  })
+  
   
   ## Close database upon exit
   session$onSessionEnded(function() {
