@@ -25,7 +25,7 @@ db <- dbConnect(SQLite(), dbname='goals.sqlite')
 df.main <- dbReadTable(db, 'mainGoals')
 df.sub <- dbReadTable(db, 'subGoals')
 
-server <- function(input, output) {
+server <- function(input, output, session) {
 
   ## main and subgoal data frames are reactive
   goals <- reactiveValues(main = df.main, sub = df.sub, subFiltered = NULL)
@@ -185,12 +185,20 @@ server <- function(input, output) {
       filter(refSub != selectedRef)
   })
   
+  ## Close database upon exit
+  session$onSessionEnded(function() {
+    observe({
+      dbWriteTable(db, 'mainGoals', goals$main, overwrite = TRUE)
+      dbDisconnect(db)
+    })
+  })
+  
   output$t1 <- renderTable(goals$main)
   output$t2 <- renderTable(goals$sub)
 }
 
 ui <- fluidPage(
-  
+  br(),
   SXPanel('panMainGoals', heading = 'Main Goals', text_size = 'large', styleclass = 'success',
           actionButton('butAddMain', 'Add', class = 'btn action-button btn-success'),
           DT::dataTableOutput('tabMainGoals')
