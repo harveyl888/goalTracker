@@ -7,23 +7,26 @@
 library(shiny)
 library(shinyExtra)
 library(RSQLite)
+library(pool)
 library(dplyr)
 library(DT)
 
+pool <- dbPool(
+  drv = RSQLite::SQLite(),
+  dbname = "goals.sqlite"
+)
+
 createDB <- function() {
-  db <- dbConnect(SQLite(), dbname='goals.sqlite')
-  dbSendQuery(db,'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
-  dbSendQuery(db,'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
-  dbDisconnect(db)
+  dbSendQuery(pool,'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
+  dbSendQuery(pool,'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
 }
 
 ## If database does not exist, create it
 if (!file.exists('goals.sqlite')) createDB()
 
 ## Connect to database and read in tables
-db <- dbConnect(SQLite(), dbname='goals.sqlite')
-df.main <- dbReadTable(db, 'mainGoals')
-df.sub <- dbReadTable(db, 'subGoals')
+df.main <- dbReadTable(pool, 'mainGoals')
+df.sub <- dbReadTable(pool, 'subGoals')
 
 server <- function(input, output, session) {
 
@@ -188,8 +191,7 @@ server <- function(input, output, session) {
   ## Close database upon exit
   session$onSessionEnded(function() {
     observe({
-      dbWriteTable(db, 'mainGoals', goals$main, overwrite = TRUE)
-      dbDisconnect(db)
+      dbWriteTable(pool, 'mainGoals', goals$main, overwrite = TRUE)
     })
   })
   
