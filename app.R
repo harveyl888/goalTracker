@@ -244,7 +244,10 @@ server <- function(input, output, session) {
   ## Close database upon exit
   session$onSessionEnded(function() {
     observe({
-      dbWriteTable(pool, 'mainGoals', goals$main, overwrite = TRUE)
+      isolate({
+        dbWriteTable(pool, 'mainGoals', goals$main, overwrite = TRUE)
+        dbWriteTable(pool, 'subGoals', goals$sub, overwrite = TRUE)
+      })
     })
   })
   
