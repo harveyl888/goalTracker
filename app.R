@@ -6,7 +6,7 @@
 
 library(shiny)
 library(shinyExtra)
-library(RSQLite)
+library(DBI)
 library(pool)
 library(dplyr)
 library(DT)
@@ -16,13 +16,40 @@ pool <- dbPool(
   dbname = "goals.sqlite"
 )
 
-createDB <- function() {
-  dbSendQuery(pool,'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
-  dbSendQuery(pool,'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
-}
+# createDB <- function() {
+#   conn <- poolCheckout(pool)
+#   dbSendQuery(pool,'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
+#   dbSendQuery(pool,'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
+#   poolReturn(conn)
+# }
 
 ## If database does not exist, create it
-if (!file.exists('goals.sqlite')) createDB()
+##if (!file.exists('goals.sqlite')) createDB()
+
+## Check tables exist in database
+addMainTable <- !'mainGoals' %in% dbListTables(pool)
+addSubTable <- !'subGoals' %in% dbListTables(pool)
+if (any(addMainTable, addSubTable)) {
+  conn <- poolCheckout(pool)
+  if(addMainTable) dbSendQuery(conn, 'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
+  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
+  poolReturn(conn)
+  
+}
+
+# 
+# if(!'mainGoals' %in% dbListTables(pool)) {
+#   conn <- poolCheckout(pool)
+#   dbSendQuery(pool,'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
+#   poolReturn(conn)
+# }
+# 
+# if(!'subGoals' %in% dbListTables(pool)) {
+#   conn <- poolCheckout(pool)
+#   dbSendQuery(pool,'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
+#   poolReturn(conn)
+# }
+
 
 ## Connect to database and read in tables
 df.main <- dbReadTable(pool, 'mainGoals')
@@ -247,6 +274,7 @@ server <- function(input, output, session) {
       isolate({
         dbWriteTable(pool, 'mainGoals', goals$main, overwrite = TRUE)
         dbWriteTable(pool, 'subGoals', goals$sub, overwrite = TRUE)
+        poolClose(pool)
       })
     })
   })
