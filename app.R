@@ -158,7 +158,8 @@ server <- function(input, output, session) {
                          dateInput('dateStart', 'Start Date'),
                          dateInput('dateEnd', 'End Date')
                        )
-                       )
+                       ),
+      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1)
     ))
   })
   
@@ -175,7 +176,7 @@ server <- function(input, output, session) {
                                              name = input$txtSubName,
                                              start = goalDates[1],
                                              end = goalDates[2],
-                                             percentComplete = 0,
+                                             percentComplete = input$sldComplete,
                                              stringsAsFactors = FALSE))
     removeModal()
   })
@@ -230,7 +231,9 @@ server <- function(input, output, session) {
                          dateInput('dateStartEdit', 'Start Date', value = goals$sub[subRow, 'start']),
                          dateInput('dateEndEdit', 'End Date', value = goals$sub[subRow, 'end'])
                        )
-      )
+      ),
+      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1)
+      
     ))
   })
   
@@ -244,7 +247,7 @@ server <- function(input, output, session) {
     } else {
       goalDates <- c(NA, NA)
     }
-    goals$sub[subRow, c(3, 4, 5)] <- c(input$txtSubNameEdit, goalDates[1], goalDates[2])
+    goals$sub[subRow, 3:6] <- c(input$txtSubNameEdit, goalDates[1], goalDates[2], input$sldComplete)
     removeModal()
   })
   
