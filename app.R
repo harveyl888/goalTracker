@@ -253,6 +253,7 @@ server <- function(input, output, session) {
         poolClose(pool)
       })
     })
+    stopApp()
   })
   
   output$t1 <- renderTable(goals$main)
