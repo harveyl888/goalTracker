@@ -183,6 +183,11 @@ server <- function(input, output, session) {
   ## filtered sub goal table
   observe({
     mainGoalRef <- goals$main[input$tabMainGoals_rows_selected, 'refMain']
+    if (length(mainGoalRef) == 0) {
+      session$sendCustomMessage('disableButton', list(button = 'butAddSub', disabled = TRUE))
+    } else {
+      session$sendCustomMessage('disableButton', list(button = 'butAddSub', disabled = FALSE))
+    }
     goals$subFiltered <- goals$sub[goals$sub$refMain == mainGoalRef, ]
   })
   
@@ -261,6 +266,12 @@ server <- function(input, output, session) {
 }
 
 ui <- fluidPage(
+  tags$head(
+    tags$script('$(document).ready(function() {
+                  Shiny.addCustomMessageHandler("disableButton", function(x) {
+                  $("#" + x.button).prop("disabled", x.disabled) });
+                });')
+  ),
   br(),
   SXPanel('panMainGoals', heading = 'Main Goals', text_size = 'large', styleclass = 'success',
           actionButton('butAddMain', 'Add', class = 'btn action-button btn-success'),
