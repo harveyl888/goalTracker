@@ -8,3 +8,9 @@
 .value-box .caption {
   font-size: 25px;
 }
+
+.goal-header {
+  font-size: 20px;
+  font-weight: bold;
+  color: blue;
+}

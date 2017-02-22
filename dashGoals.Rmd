@@ -45,19 +45,30 @@ sumOut <- lapply(seq(nrow(df.main)), function(i) {
 
 expandSub <- function(d) {
   today <- format(Sys.Date(), '%Y-%m-%d')
-  d <- transform(d, status = ifelse(is.na(start), "Not Timebound", 
-                                      ifelse(today < start, 'Not Started',
-                                             ifelse(today > end, 'Overdue', 'Ongoing'))),
-                 valColor = ifelse(is.na(start), "DarkGrey", 
-                                      ifelse(today < start, 'CornflowerBlue',
-                                             ifelse(today > end, 'Crimson', 'LightGreen'))))
+  d <- transform(d, status = ifelse(!timeBound, "Not Timebound",
+                                    ifelse(percentComplete == 100, "Completed",
+                                           ifelse(today > end, "Overdue",
+                                                  ifelse(percentComplete == 0, "Not Started", "Ongoing")))))
+  d <- transform(d, valColor = ifelse(!timeBound, "DarkGrey",
+                                    ifelse(percentComplete == 100, "DarkGreen",
+                                           ifelse(today > end, "Crimson",
+                                                  ifelse(percentComplete == 0, "CornflowerBlue", "LightGreen")))))
+  
+  # 
+  # d <- transform(d, status = ifelse(!timeBound, "Not Timebound", 
+  #                                     ifelse(today < start, 'Not Started',
+  #                                            ifelse(today > end, 'Overdue', 'Ongoing'))),
+  #                valColor = ifelse(!timeBound, "DarkGrey", 
+  #                                     ifelse(today < start, 'CornflowerBlue',
+  #                                            ifelse(today > end, 'Crimson', 'LightGreen'))))
   lapply(seq(nrow(d)), function(i) {
     list(
       knitr::knit_expand(text = "Row"),
       knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal textbox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sA}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", d[i, 'name'])), # Sub-goal Name
+      knitr::knit_expand(text = sprintf("htmltools::p(\"%s\", class=\"goal-header\")\n", d[i, 'name'])), # Sub-goal Name
+      knitr::knit_expand(text = sprintf("htmltools::h5(\"%s\")\n", d[i, 'notes'])), # Sub-goal Notes
       knitr::knit_expand(text = "\n```\n"), # end r chunk
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
@@ -81,12 +92,6 @@ out <- lapply(seq(nrow(df.main)), function(i) {
     knitr::knit_expand(text = "\n```\n"), # end r chunk
     unlist(expandSub(df.sub %>% filter(refMain == df.main[i, 'refMain'])))
   )
-
-  # cont[[1]] <- knitr::knit_expand(text = sprintf("### GOAL %s\n", i)) # Tab header
-  # cont[[2]] <- knitr::knit_expand(text = sprintf("\n```{r d%s}\n", i)) # start r chunk
-  # cont[[3]] <- knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", df.main[i, 'name']))
-  # cont[[4]] <- knitr::knit_expand(text = "\n```\n") # end r chunk
-
   paste(unlist(cont), collapse = '\n') # collapse together all lines with newline separator
 
 })
