@@ -54,13 +54,6 @@ expandSub <- function(d) {
                                            ifelse(today > end, "Crimson",
                                                   ifelse(percentComplete == 0, "CornflowerBlue", "LightGreen")))))
   
-  # 
-  # d <- transform(d, status = ifelse(!timeBound, "Not Timebound", 
-  #                                     ifelse(today < start, 'Not Started',
-  #                                            ifelse(today > end, 'Overdue', 'Ongoing'))),
-  #                valColor = ifelse(!timeBound, "DarkGrey", 
-  #                                     ifelse(today < start, 'CornflowerBlue',
-  #                                            ifelse(today > end, 'Crimson', 'LightGreen'))))
   lapply(seq(nrow(d)), function(i) {
     list(
       knitr::knit_expand(text = "Row"),
@@ -72,7 +65,8 @@ expandSub <- function(d) {
       knitr::knit_expand(text = "\n```\n"), # end r chunk
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = sprintf("valueBox(caption = '%s<br>%s', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor'])), # Valuebox
+      knitr::knit_expand(text = ifelse(d[i, 'timeBound'], sprintf("valueBox(caption = '%s<br>%s', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor']),
+                         sprintf("valueBox(caption = ' ', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'status'], d[i, 'valColor']))), # Valuebox
       knitr::knit_expand(text = "\n```\n"), # end r chunk
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sC}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
