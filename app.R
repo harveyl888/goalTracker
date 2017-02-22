@@ -21,8 +21,8 @@ addMainTable <- !'mainGoals' %in% dbListTables(pool)
 addSubTable <- !'subGoals' %in% dbListTables(pool)
 if (any(addMainTable, addSubTable)) {
   conn <- poolCheckout(pool)
-  if(addMainTable) dbSendQuery(conn, 'CREATE TABLE mainGoals (refMain INTEGER, name TEXT)')
-  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, start TEXT, end TEXT, percentComplete INTEGER)')
+  if(addMainTable) dbSendQuery(conn, 'CREATE TABLE mainGoals (refMain INTEGER, name TEXT, notes TEXT)')
+  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, timeBound INTEGER, start TEXT, end TEXT, percentComplete INTEGER, notes TEXT)')
   poolReturn(conn)
   
 }
@@ -67,7 +67,8 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "Add Main Goal",
       div(style='display:inline-block; vertical-align:middle;', textInput('txtMainName', 'Name')),
-      div(style='display:inline-block; vertical-align:middle;', actionButton('butMainConfirm', 'Add', class = 'btn action-button btn-success'))
+      div(style='display:inline-block; vertical-align:middle;', actionButton('butMainConfirm', 'Add', class = 'btn action-button btn-success')),
+      SXTextArea('txtMainNotes', 'Notes', resizable = FALSE)
     ))
   })
   
@@ -75,6 +76,7 @@ server <- function(input, output, session) {
   observeEvent(input$butMainConfirm, {
     goals$main <- rbind(goals$main, data.frame(refMain = nextMainRef(),
                                                name = input$txtMainName,
+                                               notes = input$txtMainNotes,
                                                stringsAsFactors = FALSE))
     removeModal()
   })
@@ -135,7 +137,8 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "Edit Main Goal",
       div(style='display:inline-block; vertical-align:middle;', textInput('txtMainNameEdit', 'Name', value = goals$main[selectedRow, 'name'])),
-      div(style='display:inline-block; vertical-align:middle;', actionButton('butMainConfirmEdit', 'OK', class = 'btn action-button btn-success'))
+      div(style='display:inline-block; vertical-align:middle;', actionButton('butMainConfirmEdit', 'OK', class = 'btn action-button btn-success')),
+      SXTextArea('txtMainNotesEdit', 'Notes', text = goals$main[selectedRow, 'notes'], resizable = FALSE)
     ))
   })
   
@@ -143,6 +146,7 @@ server <- function(input, output, session) {
   observeEvent(input$butMainConfirmEdit, {
     selectedRow <- as.numeric(strsplit(input$main_edit_button[1], "_")[[1]][3])
     goals$main[selectedRow, 'name'] <- input$txtMainNameEdit
+    goals$main[selectedRow, 'notes'] <- input$txtMainNotesEdit
     removeModal()
   })
   
@@ -159,7 +163,8 @@ server <- function(input, output, session) {
                          dateInput('dateEnd', 'End Date')
                        )
                        ),
-      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1)
+      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1),
+      SXTextArea('txtSubNotes', 'Notes', resizable = FALSE)
     ))
   })
   
@@ -174,9 +179,11 @@ server <- function(input, output, session) {
     goals$sub <- rbind(goals$sub, data.frame(refSub = nextSubRef(),
                                              refMain = mainGoalRef,
                                              name = input$txtSubName,
+                                             timeBound = input$chkTimebound,
                                              start = goalDates[1],
                                              end = goalDates[2],
                                              percentComplete = input$sldComplete,
+                                             notes = input$txtSubNotes,
                                              stringsAsFactors = FALSE))
     removeModal()
   })
@@ -232,8 +239,8 @@ server <- function(input, output, session) {
                          dateInput('dateEndEdit', 'End Date', value = goals$sub[subRow, 'end'])
                        )
       ),
-      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1)
-      
+      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1),
+      SXTextArea('txtSubNotesEdit', 'Notes', text = goals$sub[subRow, 'notes'], resizable = FALSE)
     ))
   })
   
@@ -247,7 +254,7 @@ server <- function(input, output, session) {
     } else {
       goalDates <- c(NA, NA)
     }
-    goals$sub[subRow, 3:6] <- c(input$txtSubNameEdit, goalDates[1], goalDates[2], input$sldComplete)
+    goals$sub[subRow, 3:8] <- c(input$txtSubNameEdit, input$chkTimeboundEdit, goalDates[1], goalDates[2], input$sldComplete, input$txtSubNotesEdit)
     removeModal()
   })
   
