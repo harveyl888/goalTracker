@@ -4,6 +4,7 @@ output:
   flexdashboard::flex_dashboard:
     orientation: rows
     vertical_layout: scroll
+    css: styles.css
 ---
 
 ```{r setup, include=FALSE}
@@ -60,7 +61,7 @@ expandSub <- function(d) {
       knitr::knit_expand(text = "\n```\n"), # end r chunk
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = sprintf("valueBox(value = '%s-%s', caption = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor'])), # Valuebox
+      knitr::knit_expand(text = sprintf("valueBox(caption = '%s<br>%s', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor'])), # Valuebox
       knitr::knit_expand(text = "\n```\n"), # end r chunk
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sC}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk

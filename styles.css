@@ -1,0 +1,10 @@
+.value-box .value {
+  font-size: 25px;
+  font-weight: bold;
+  margin: 0 0 3px 0;
+  padding: 0;
+}
+
+.value-box .caption {
+  font-size: 25px;
+}
