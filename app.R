@@ -179,7 +179,7 @@ server <- function(input, output, session) {
     goals$sub <- rbind(goals$sub, data.frame(refSub = nextSubRef(),
                                              refMain = mainGoalRef,
                                              name = input$txtSubName,
-                                             timeBound = input$chkTimebound,
+                                             timeBound = as.integer(input$chkTimebound),
                                              start = goalDates[1],
                                              end = goalDates[2],
                                              percentComplete = input$sldComplete,
@@ -232,7 +232,7 @@ server <- function(input, output, session) {
       title = "Edit Sub Goal",
       div(style='display:inline-block; vertical-align:middle;', textInput('txtSubNameEdit', 'Name', value = goals$sub[subRow, 'name'])),
       div(style='display:inline-block; vertical-align:middle;', actionButton('butSubConfirmEdit', 'OK', class = 'btn action-button btn-success')),
-      checkboxInput('chkTimeboundEdit', 'Time Bound?'),
+      checkboxInput('chkTimeboundEdit', value = goals$sub[subRow, 'timeBound'] == 1, 'Time Bound?'),
       conditionalPanel('input.chkTimeboundEdit == true',
                        wellPanel(
                          dateInput('dateStartEdit', 'Start Date', value = goals$sub[subRow, 'start']),
@@ -254,7 +254,7 @@ server <- function(input, output, session) {
     } else {
       goalDates <- c(NA, NA)
     }
-    goals$sub[subRow, 3:8] <- c(input$txtSubNameEdit, input$chkTimeboundEdit, goalDates[1], goalDates[2], input$sldComplete, input$txtSubNotesEdit)
+    goals$sub[subRow, 3:8] <- list(input$txtSubNameEdit, as.integer(input$chkTimeboundEdit), goalDates[1], goalDates[2], input$sldComplete, input$txtSubNotesEdit)
     removeModal()
   })
   
