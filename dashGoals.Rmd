@@ -2,6 +2,7 @@
 title: "Goal Tracker"
 output: 
   flexdashboard::flex_dashboard:
+    orientation: rows
     vertical_layout: scroll
 ---
 
@@ -9,17 +10,15 @@ output:
 library(flexdashboard)
 library(pool)
 library(DBI)
+library(dplyr)
 ```
 
 ```{r readData, include=FALSE}
 ## Read in data from database
-pool <- dbPool(
-  drv = RSQLite::SQLite(),
-  dbname = "goals.sqlite"
-)
-
-df.main <- dbReadTable(pool, 'mainGoals')
-df.sub <- dbReadTable(pool, 'subGoals')
+db <- dbConnect(RSQLite::SQLite(), 'goals.sqlite')
+df.main <- dbReadTable(db, 'mainGoals')
+df.sub <- dbReadTable(db, 'subGoals')
+dbDisconnect(db)
 
 nbox <- nrow(df.main)
 
@@ -42,25 +41,46 @@ sumOut <- lapply(seq(nbox), function(i) {
 
 `r knitr::knit(text = paste(sumOut, collapse = '\n'))`
 
-Details
-==========================
-
-Column {.tabset .tabset-fade}
------------------------------
 
 ```{r, echo = FALSE, eval = TRUE}
 
+expandSub <- function(d) {
+  lapply(seq(nrow(d)), function(i) {
+    list(
+      knitr::knit_expand(text = "Row"),
+      knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
+      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal textbox header
+      knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sA}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
+      knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", d[i, 'name'])), # Sub-goal Name
+      knitr::knit_expand(text = "\n```\n"), # end r chunk
+      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
+      knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
+      knitr::knit_expand(text = sprintf("gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))", d[i, 'percentComplete'])), # Goal Name
+      knitr::knit_expand(text = "\n```\n") # end r chunk
+    )
+  })
+}
+
 out <- lapply(seq(nbox), function(i) {
+  
+  cont <- list(
+    knitr::knit_expand(text = sprintf("GOAL %s", i)), # New Page
+    knitr::knit_expand(text = "============================\n\n"), # New Page
+    knitr::knit_expand(text = sprintf("\n```{r maingoal_%s}\n", df.main[i, 'refMain'])), # start r chunk
+    knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", df.main[i, 'name'])), # Goal Name
+    knitr::knit_expand(text = "\n```\n"), # end r chunk
+    unlist(expandSub(df.sub %>% filter(refMain == df.main[i, 'refMain'])))
+  )
 
-  a1 <- knitr::knit_expand(text = sprintf("### GOAL %s\n", i)) # Tab header
-  a2 <- knitr::knit_expand(text = sprintf("\n```{r d%s}\n", i)) # start r chunk
-  a3 <- knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", df.main[i, 'name']))
-  a4 <- knitr::knit_expand(text = "\n```\n") # end r chunk
+  # cont[[1]] <- knitr::knit_expand(text = sprintf("### GOAL %s\n", i)) # Tab header
+  # cont[[2]] <- knitr::knit_expand(text = sprintf("\n```{r d%s}\n", i)) # start r chunk
+  # cont[[3]] <- knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", df.main[i, 'name']))
+  # cont[[4]] <- knitr::knit_expand(text = "\n```\n") # end r chunk
 
-  paste(a1, a2, a3, a4, collapse = '\n') # collapse together all lines with newline separator
+  paste(unlist(cont), collapse = '\n') # collapse together all lines with newline separator
 
 })
 
 ```
 
-`r knitr::knit(text = paste(out, collapse = '\n'))`
+`r knitr::knit(text = paste(unlist(out), collapse = '\n'))`
