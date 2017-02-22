@@ -159,10 +159,8 @@ server <- function(input, output, session) {
       checkboxInput('chkTimebound', 'Time Bound?'),
       conditionalPanel('input.chkTimebound == true',
                        wellPanel(
-                         dateInput('dateStart', 'Start Date'),
-                         dateInput('dateEnd', 'End Date')
-                       )
-                       ),
+                         dateRangeInput('dateSub', 'start and end dates', format = 'yyyy-mm-dd')
+                       )),
       sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1),
       SXTextArea('txtSubNotes', 'Notes', resizable = FALSE)
     ))
@@ -171,17 +169,12 @@ server <- function(input, output, session) {
   ## sub goal added - update table
   observeEvent(input$butSubConfirm, {
     mainGoalRef <- goals$main[input$tabMainGoals_rows_selected, 'refMain']
-    if(input$chkTimebound == TRUE) {
-      goalDates <- c(as.character(input$dateStart), as.character(input$dateEnd))
-    } else {
-      goalDates <- c(NA, NA)
-    }
     goals$sub <- rbind(goals$sub, data.frame(refSub = nextSubRef(),
                                              refMain = mainGoalRef,
                                              name = input$txtSubName,
                                              timeBound = as.integer(input$chkTimebound),
-                                             start = goalDates[1],
-                                             end = goalDates[2],
+                                             start = ifelse(input$chkTimebound, as.character(input$dateSub[1]), NA),
+                                             end = ifelse(input$chkTimebound, as.character(input$dateSub[2]), NA),
                                              percentComplete = input$sldComplete,
                                              notes = input$txtSubNotes,
                                              stringsAsFactors = FALSE))
@@ -235,8 +228,9 @@ server <- function(input, output, session) {
       checkboxInput('chkTimeboundEdit', value = goals$sub[subRow, 'timeBound'] == 1, 'Time Bound?'),
       conditionalPanel('input.chkTimeboundEdit == true',
                        wellPanel(
-                         dateInput('dateStartEdit', 'Start Date', value = goals$sub[subRow, 'start']),
-                         dateInput('dateEndEdit', 'End Date', value = goals$sub[subRow, 'end'])
+                         dateRangeInput('dateSubEdit', 'start and end dates', format = 'yyyy-mm-dd', start = goals$sub[subRow, 'start'], end = goals$sub[subRow, 'end'])
+                         # dateInput('dateStartEdit', 'Start Date', value = goals$sub[subRow, 'start']),
+                         # dateInput('dateEndEdit', 'End Date', value = goals$sub[subRow, 'end'])
                        )
       ),
       sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1),
@@ -249,12 +243,12 @@ server <- function(input, output, session) {
     selectedRow <- as.numeric(strsplit(input$sub_edit_button[1], "_")[[1]][3])
     selectedRef <- goals$subFiltered[selectedRow, 'refSub']
     subRow <- which(goals$sub$refSub == selectedRef)
-    if(input$chkTimeboundEdit == TRUE) {
-      goalDates <- c(as.character(input$dateStartEdit), as.character(input$dateEndEdit))
-    } else {
-      goalDates <- c(NA, NA)
-    }
-    goals$sub[subRow, 3:8] <- list(input$txtSubNameEdit, as.integer(input$chkTimeboundEdit), goalDates[1], goalDates[2], input$sldComplete, input$txtSubNotesEdit)
+    goals$sub[subRow, 3:8] <- list(input$txtSubNameEdit, 
+                                   as.integer(input$chkTimeboundEdit), 
+                                   ifelse(input$chkTimeboundEdit, as.character(input$dateSubEdit[1]), NA),
+                                   ifelse(input$chkTimeboundEdit, as.character(input$dateSubEdit[2]), NA),
+                                   input$sldComplete, 
+                                   input$txtSubNotesEdit)
     removeModal()
   })
   
