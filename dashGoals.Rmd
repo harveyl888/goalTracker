@@ -1,0 +1,66 @@
+---
+title: "Goal Tracker"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(pool)
+library(DBI)
+```
+
+```{r readData, include=FALSE}
+## Read in data from database
+pool <- dbPool(
+  drv = RSQLite::SQLite(),
+  dbname = "goals.sqlite"
+)
+
+df.main <- dbReadTable(pool, 'mainGoals')
+df.sub <- dbReadTable(pool, 'subGoals')
+
+nbox <- nrow(df.main)
+
+```
+
+Summary
+==========================
+
+```{r, echo = FALSE, eval = TRUE}
+
+sumOut <- lapply(seq(nbox), function(i) {
+
+  a1 <- knitr::knit_expand(text = sprintf("### GOAL: %s\n", df.main[i, 'name'])) # Goal name
+  a2 <- knitr::knit_expand(text = sprintf("\n```{r c%s}\n", i)) # start r chunk
+  a3 <- knitr::knit_expand(text = "\n```\n") # end r chunk
+  paste(a1, a2, a3, collapse = '\n') # collapse together all lines with newline separator
+})
+
+```
+
+`r knitr::knit(text = paste(sumOut, collapse = '\n'))`
+
+Details
+==========================
+
+Column {.tabset .tabset-fade}
+-----------------------------
+
+```{r, echo = FALSE, eval = TRUE}
+
+out <- lapply(seq(nbox), function(i) {
+
+  a1 <- knitr::knit_expand(text = sprintf("### GOAL %s\n", i)) # Tab header
+  a2 <- knitr::knit_expand(text = sprintf("\n```{r d%s}\n", i)) # start r chunk
+  a3 <- knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", df.main[i, 'name']))
+  a4 <- knitr::knit_expand(text = "\n```\n") # end r chunk
+
+  paste(a1, a2, a3, a4, collapse = '\n') # collapse together all lines with newline separator
+
+})
+
+```
+
+`r knitr::knit(text = paste(out, collapse = '\n'))`
