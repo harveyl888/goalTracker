@@ -20,8 +20,6 @@ df.main <- dbReadTable(db, 'mainGoals')
 df.sub <- dbReadTable(db, 'subGoals')
 dbDisconnect(db)
 
-nbox <- nrow(df.main)
-
 ```
 
 Summary
@@ -29,7 +27,7 @@ Summary
 
 ```{r, echo = FALSE, eval = TRUE}
 
-sumOut <- lapply(seq(nbox), function(i) {
+sumOut <- lapply(seq(nrow(df.main)), function(i) {
 
   a1 <- knitr::knit_expand(text = sprintf("### GOAL: %s\n", df.main[i, 'name'])) # Goal name
   a2 <- knitr::knit_expand(text = sprintf("\n```{r c%s}\n", i)) # start r chunk
@@ -45,6 +43,13 @@ sumOut <- lapply(seq(nbox), function(i) {
 ```{r, echo = FALSE, eval = TRUE}
 
 expandSub <- function(d) {
+  today <- format(Sys.Date(), '%Y-%m-%d')
+  d <- transform(d, status = ifelse(is.na(start), "Not Timebound", 
+                                      ifelse(today < start, 'Not Started',
+                                             ifelse(today > end, 'Overdue', 'Ongoing'))),
+                 valColor = ifelse(is.na(start), "DarkGrey", 
+                                      ifelse(today < start, 'CornflowerBlue',
+                                             ifelse(today > end, 'Crimson', 'LightGreen'))))
   lapply(seq(nrow(d)), function(i) {
     list(
       knitr::knit_expand(text = "Row"),
@@ -53,15 +58,19 @@ expandSub <- function(d) {
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sA}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
       knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", d[i, 'name'])), # Sub-goal Name
       knitr::knit_expand(text = "\n```\n"), # end r chunk
-      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
+      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
+      knitr::knit_expand(text = sprintf("valueBox(value = '%s-%s', caption = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor'])), # Valuebox
+      knitr::knit_expand(text = "\n```\n"), # end r chunk
+      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
+      knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sC}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
       knitr::knit_expand(text = sprintf("gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))", d[i, 'percentComplete'])), # Goal Name
       knitr::knit_expand(text = "\n```\n") # end r chunk
     )
   })
 }
 
-out <- lapply(seq(nbox), function(i) {
+out <- lapply(seq(nrow(df.main)), function(i) {
   
   cont <- list(
     knitr::knit_expand(text = sprintf("GOAL %s", i)), # New Page
