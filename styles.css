@@ -14,3 +14,25 @@
   font-weight: bold;
   color: blue;
 }
+
+.label {
+    margin: 2px;
+    padding: 2px 6px 4px;
+    font-size: 9.75px;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background-color: #bfbfbf;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.label-new {
+  background-color: #46a546;
+}
+
+.label-priority {
+  background-color: #c43c35;
+}

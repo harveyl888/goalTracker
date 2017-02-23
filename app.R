@@ -22,7 +22,7 @@ addSubTable <- !'subGoals' %in% dbListTables(pool)
 if (any(addMainTable, addSubTable)) {
   conn <- poolCheckout(pool)
   if(addMainTable) dbSendQuery(conn, 'CREATE TABLE mainGoals (refMain INTEGER, name TEXT, notes TEXT)')
-  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, timeBound INTEGER, start TEXT, end TEXT, percentComplete INTEGER, notes TEXT)')
+  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, timeBound INTEGER, start TEXT, end TEXT, percentComplete INTEGER, tags TEXT, notes TEXT)')
   poolReturn(conn)
   
 }
@@ -167,8 +167,15 @@ server <- function(input, output, session) {
                              actionButton('butQ4', label = 'Q4', class = 'btn action-button btn-info')
                          )
                        )),
-      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1),
-      SXTextArea('txtSubNotes', 'Notes', resizable = FALSE)
+      fluidRow(
+        column(8,
+               sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1),
+               SXTextArea('txtSubNotes', 'Notes', resizable = FALSE)
+        ),
+        column(4,
+               checkboxGroupInput('chkSubLabels', NULL, choices = c('new', 'priority'))
+               )
+      )
     ))
   })
   
@@ -206,6 +213,7 @@ server <- function(input, output, session) {
                                              start = ifelse(input$chkTimebound, as.character(input$dateSub[1]), NA),
                                              end = ifelse(input$chkTimebound, as.character(input$dateSub[2]), NA),
                                              percentComplete = input$sldComplete,
+                                             tags = ifelse(length(input$chkSubLabels) > 0, paste0(input$chkSubLabels, collapse = ';'), NA),
                                              notes = input$txtSubNotes,
                                              stringsAsFactors = FALSE))
     removeModal()
@@ -251,6 +259,13 @@ server <- function(input, output, session) {
     selectedRow <- as.numeric(strsplit(input$sub_edit_button[1], "_")[[1]][3])
     selectedRef <- goals$subFiltered[selectedRow, 'refSub']
     subRow <- which(goals$sub$refSub == selectedRef)
+    
+    if (!is.na(goals$sub[subRow, 'tags'])) {
+      selectedTags <- unlist(strsplit(goals$sub[subRow, 'tags'], ';'))
+    } else {
+      selectedTags <- NULL
+    }
+    
     showModal(modalDialog(
       title = "Edit Sub Goal",
       div(style='display:inline-block; vertical-align:middle;', textInput('txtSubNameEdit', 'Name', value = goals$sub[subRow, 'name'])),
@@ -267,8 +282,15 @@ server <- function(input, output, session) {
                          )
                        )
       ),
-      sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1),
-      SXTextArea('txtSubNotesEdit', 'Notes', text = goals$sub[subRow, 'notes'], resizable = FALSE)
+      fluidRow(
+        column(8,
+               sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1),
+               SXTextArea('txtSubNotesEdit', 'Notes', text = goals$sub[subRow, 'notes'], resizable = FALSE)
+        ),
+        column(4,
+               checkboxGroupInput('chkSubLabelsEdit', NULL, choices = c('new', 'priority'), selected = selectedTags)
+        )
+      )
     ))
   })
   
@@ -301,11 +323,12 @@ server <- function(input, output, session) {
     selectedRow <- as.numeric(strsplit(input$sub_edit_button[1], "_")[[1]][3])
     selectedRef <- goals$subFiltered[selectedRow, 'refSub']
     subRow <- which(goals$sub$refSub == selectedRef)
-    goals$sub[subRow, 3:8] <- list(input$txtSubNameEdit, 
+    goals$sub[subRow, 3:9] <- list(input$txtSubNameEdit, 
                                    as.integer(input$chkTimeboundEdit), 
                                    ifelse(input$chkTimeboundEdit, as.character(input$dateSubEdit[1]), NA),
                                    ifelse(input$chkTimeboundEdit, as.character(input$dateSubEdit[2]), NA),
                                    input$sldComplete, 
+                                   ifelse(length(input$chkSubLabelsEdit) > 0, paste0(input$chkSubLabelsEdit, collapse = ';'), NA),
                                    input$txtSubNotesEdit)
     removeModal()
   })

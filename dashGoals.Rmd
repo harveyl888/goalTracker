@@ -12,6 +12,7 @@ library(flexdashboard)
 library(pool)
 library(DBI)
 library(dplyr)
+library(htmltools)
 ```
 
 ```{r readData, include=FALSE}
@@ -53,15 +54,20 @@ expandSub <- function(d) {
                                     ifelse(percentComplete == 100, "DarkGreen",
                                            ifelse(today > end, "Crimson",
                                                   ifelse(percentComplete == 0, "CornflowerBlue", "LightGreen")))))
-  
+
   lapply(seq(nrow(d)), function(i) {
     list(
       knitr::knit_expand(text = "Row"),
       knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal textbox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sA}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = sprintf("htmltools::p(\"%s\", class=\"goal-header\")\n", d[i, 'name'])), # Sub-goal Name
-      knitr::knit_expand(text = sprintf("htmltools::h5(\"%s\")\n", d[i, 'notes'])), # Sub-goal Notes
+      knitr::knit_expand(text = sprintf("p(\"%s\", class=\"goal-header\")\n", d[i, 'name'])), # Sub-goal Name
+      knitr::knit_expand(text = sprintf("h5(\"%s\")\n", d[i, 'notes'])), # Sub-goal Notes
+      ifelse(
+        is.na(d[i, 'tags']),
+        knitr::knit_expand(text = ''),
+        sapply(strsplit(d[i, 'tags'], ';'), function(t) knitr::knit_expand(text = sprintf("a(class = \"label label-%s\", \"%s\")", t, t)))
+      ),
       knitr::knit_expand(text = "\n```\n"), # end r chunk
       knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
       knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
@@ -82,7 +88,7 @@ out <- lapply(seq(nrow(df.main)), function(i) {
     knitr::knit_expand(text = sprintf("GOAL %s", i)), # New Page
     knitr::knit_expand(text = "============================\n\n"), # New Page
     knitr::knit_expand(text = sprintf("\n```{r maingoal_%s}\n", df.main[i, 'refMain'])), # start r chunk
-    knitr::knit_expand(text = sprintf("htmltools::h4(\"Name: %s\")\n", df.main[i, 'name'])), # Goal Name
+    knitr::knit_expand(text = sprintf("h4(\"Name: %s\")\n", df.main[i, 'name'])), # Goal Name
     knitr::knit_expand(text = "\n```\n"), # end r chunk
     unlist(expandSub(df.sub %>% filter(refMain == df.main[i, 'refMain'])))
   )
