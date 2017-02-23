@@ -9,7 +9,6 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-library(pool)
 library(DBI)
 library(dplyr)
 library(htmltools)
