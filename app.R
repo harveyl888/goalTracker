@@ -159,11 +159,41 @@ server <- function(input, output, session) {
       checkboxInput('chkTimebound', 'Time Bound?'),
       conditionalPanel('input.chkTimebound == true',
                        wellPanel(
-                         dateRangeInput('dateSub', 'start and end dates', format = 'yyyy-mm-dd')
+                         dateRangeInput('dateSub', label = 'start and end dates', format = 'yyyy-mm-dd'),
+                         div(id = 'btnQtrs', class = 'btn-group', role = 'group',
+                             actionButton('butQ1', label = 'Q1', class = 'btn action-button btn-info'),
+                             actionButton('butQ2', label = 'Q2', class = 'btn action-button btn-info'),
+                             actionButton('butQ3', label = 'Q3', class = 'btn action-button btn-info'),
+                             actionButton('butQ4', label = 'Q4', class = 'btn action-button btn-info')
+                         )
                        )),
       sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = 0, step = 1),
       SXTextArea('txtSubNotes', 'Notes', resizable = FALSE)
     ))
+  })
+  
+  observeEvent(input$butQ1, {
+    updateDateRangeInput(session, 'dateSub', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-01-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-03-31'))
+  })
+  
+  observeEvent(input$butQ2, {
+    updateDateRangeInput(session, 'dateSub', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-04-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-06-30'))
+  })
+  
+  observeEvent(input$butQ3, {
+    updateDateRangeInput(session, 'dateSub', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-07-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-09-30'))
+  })
+  
+  observeEvent(input$butQ4, {
+    updateDateRangeInput(session, 'dateSub', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-10-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-12-31'))
   })
   
   ## sub goal added - update table
@@ -228,14 +258,42 @@ server <- function(input, output, session) {
       checkboxInput('chkTimeboundEdit', value = goals$sub[subRow, 'timeBound'] == 1, 'Time Bound?'),
       conditionalPanel('input.chkTimeboundEdit == true',
                        wellPanel(
-                         dateRangeInput('dateSubEdit', 'start and end dates', format = 'yyyy-mm-dd', start = goals$sub[subRow, 'start'], end = goals$sub[subRow, 'end'])
-                         # dateInput('dateStartEdit', 'Start Date', value = goals$sub[subRow, 'start']),
-                         # dateInput('dateEndEdit', 'End Date', value = goals$sub[subRow, 'end'])
+                         dateRangeInput('dateSubEdit', label = 'start and end dates', format = 'yyyy-mm-dd', start = goals$sub[subRow, 'start'], end = goals$sub[subRow, 'end']),
+                         div(id = 'btnQtrsEdit', class = 'btn-group', role = 'group',
+                             actionButton('butQ1Edit', label = 'Q1', class = 'btn action-button btn-info'),
+                             actionButton('butQ2Edit', label = 'Q2', class = 'btn action-button btn-info'),
+                             actionButton('butQ3Edit', label = 'Q3', class = 'btn action-button btn-info'),
+                             actionButton('butQ4Edit', label = 'Q4', class = 'btn action-button btn-info')
+                         )
                        )
       ),
       sliderInput('sldComplete', 'Completion', min = 0, max = 100, value = goals$sub[subRow, 'percentComplete'], step = 1),
       SXTextArea('txtSubNotesEdit', 'Notes', text = goals$sub[subRow, 'notes'], resizable = FALSE)
     ))
+  })
+  
+  observeEvent(input$butQ1Edit, {
+    updateDateRangeInput(session, 'dateSubEdit', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-01-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-03-31'))
+  })
+  
+  observeEvent(input$butQ2Edit, {
+    updateDateRangeInput(session, 'dateSubEdit', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-04-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-06-30'))
+  })
+  
+  observeEvent(input$butQ3Edit, {
+    updateDateRangeInput(session, 'dateSubEdit', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-07-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-09-30'))
+  })
+  
+  observeEvent(input$butQ4Edit, {
+    updateDateRangeInput(session, 'dateSubEdit', label = 'start and end dates', 
+                         start = paste0(format(Sys.Date(), '%Y'), '-10-01'),
+                         end = paste0(format(Sys.Date(), '%Y'), '-12-31'))
   })
   
   ## confirm sub goal edit
