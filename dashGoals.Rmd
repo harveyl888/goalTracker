@@ -40,13 +40,13 @@ sumOut <- lapply(seq(nrow(df.main)), function(i) {
     knitr::knit_expand(text = "\n```\n"), # end r chunk
 
     ## Gauges
-    knitr::knit_expand(text = "Row {data-height=200}"),
+    knitr::knit_expand(text = "Row {data-height=150}"),
     knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
     sapply(seq(nrow(df.subForMain)), function(j){
       list(
         knitr::knit_expand(text = sprintf("### SUBGOAL %s", j)), # Sub-goal gauge header
         knitr::knit_expand(text = sprintf("\n```{r mainsubgoal_%s_%sB}\n", df.subForMain[j, 'refMain'], df.subForMain[j, 'refSub'])), # start r chunk
-        knitr::knit_expand(text = sprintf("gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))", df.subForMain[j, 'percentComplete'])), # Gauge showing progress
+        knitr::knit_expand(text = sprintf("div(gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39))), class = \"tooltipX\", span(class = \"tooltiptextX\", \"%s\"))", df.subForMain[j, 'percentComplete'], df.subForMain[j, 'name'])), # Gauge showing progress
         knitr::knit_expand(text = "\n```\n") # end r chunk
       )
     })
