@@ -23,17 +23,35 @@ dbDisconnect(db)
 
 ```
 
+
 Summary
 ==========================
 
 ```{r, echo = FALSE, eval = TRUE}
 
 sumOut <- lapply(seq(nrow(df.main)), function(i) {
+  df.subForMain <- df.sub %>% filter(refMain == df.main[i, 'refMain'])
+  goals <- list(
+    ## Heading
+    knitr::knit_expand(text = "Row {data-height=55}"),
+    knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
+    knitr::knit_expand(text = sprintf("\n```{r mainheader_%s}\n", df.main[i, 'refMain'])), # start r chunk
+    knitr::knit_expand(text = sprintf("p(span(\"%s\", style = \"font-size: 130%%; color: blue;\"), br(), span(\"%s\", style = \"font-size: 85%%;\"))", df.main[i, 'name'], df.main[i, 'notes'])),
+    knitr::knit_expand(text = "\n```\n"), # end r chunk
 
-  a1 <- knitr::knit_expand(text = sprintf("### GOAL: %s\n", df.main[i, 'name'])) # Goal name
-  a2 <- knitr::knit_expand(text = sprintf("\n```{r c%s}\n", i)) # start r chunk
-  a3 <- knitr::knit_expand(text = "\n```\n") # end r chunk
-  paste(a1, a2, a3, collapse = '\n') # collapse together all lines with newline separator
+    ## Gauges
+    knitr::knit_expand(text = "Row {data-height=200}"),
+    knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
+    sapply(seq(nrow(df.subForMain)), function(j){
+      list(
+        knitr::knit_expand(text = sprintf("### SUBGOAL %s", j)), # Sub-goal gauge header
+        knitr::knit_expand(text = sprintf("\n```{r mainsubgoal_%s_%sB}\n", df.subForMain[j, 'refMain'], df.subForMain[j, 'refSub'])), # start r chunk
+        knitr::knit_expand(text = sprintf("gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))", df.subForMain[j, 'percentComplete'])), # Gauge showing progress
+        knitr::knit_expand(text = "\n```\n") # end r chunk
+      )
+    })
+  )
+  paste(unlist(goals), collapse = '\n') # collapse together all lines with newline separator
 })
 
 ```
