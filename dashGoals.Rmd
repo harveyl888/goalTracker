@@ -83,9 +83,13 @@ df.tv$group <- paste0('Goal ', df.tv$maingoal_ref)
 df.tv$content <- paste0('SubGoal ', df.tv$maingoal_ref, '.', df.tv$subgoal_ref)
 df.tv$title <- df.tv$name
 
+colRamp <- colorRampPalette(c('red', 'green'))
+colRamp101 <- colRamp(101)
+df.tv$style = paste0('background-color: ', colRamp101[df.tv$percentComplete + 1])
+
 df.tvGroups <- data.frame(id = unique(df.tv$group), content = unique(df.tv$group))
 
-timevis(data = df.tv, groups = df.tvGroups, showZoom = FALSE, width = '1000px')
+timevis(data = df.tv, groups = df.tvGroups, showZoom = FALSE, width = '1000px', options = list(selectable = FALSE))
 
 ```
 
