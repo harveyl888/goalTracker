@@ -345,9 +345,6 @@ server <- function(input, output, session) {
     })
     stopApp()
   })
-  
-  output$t1 <- renderTable(goals$main)
-  output$t2 <- renderTable(goals$sub)
 }
 
 ui <- fluidPage(
@@ -361,14 +358,10 @@ ui <- fluidPage(
   SXPanel('panMainGoals', heading = 'Main Goals', text_size = 'large', styleclass = 'success',
           actionButton('butAddMain', 'Add', class = 'btn action-button btn-success'),
           DT::dataTableOutput('tabMainGoals')
-          ),
+  ),
   SXPanel('panSubGoals', heading = 'Sub Goals', text_size = 'large', styleclass = 'info',
           actionButton('butAddSub', 'Add', class = 'btn action-button btn-success'),
           DT::dataTableOutput('tabSubGoals')
-  ),
-  fluidRow(
-    column(6, tableOutput('t1')),
-    column(6, tableOutput('t2'))
   )
 )
 
