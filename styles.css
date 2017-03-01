@@ -40,14 +40,14 @@
 /* Tooltip container */
 .tooltipX {
     position: relative;
-    width: 100%;
+    width: auto;
     overflow: visible;
 }
 
 /* Tooltip text */
 .tooltipX .tooltiptextX {
     visibility: hidden;
-    width: 120px;
+    width: auto;
     background-color: black;
     color: #fff;
     font-size: 75%;
@@ -58,7 +58,7 @@
     /* Position the tooltip */
     position: absolute;
     z-index: 1;
-    top: 20%;
+    top: 5%;
     left: 5%;
 
 }
