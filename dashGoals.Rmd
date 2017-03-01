@@ -13,6 +13,7 @@ library(DBI)
 library(knitr)
 library(dplyr)
 library(htmltools)
+library(timevis)
 ```
 
 ```{r readData, include=FALSE}
@@ -63,6 +64,30 @@ sumOut <- lapply(seq(nrow(df.main)), function(i) {
 ```
 
 `r knit(text = paste(sumOut, collapse = '\n'))`
+
+
+Timeline
+==========================
+
+Row
+--------------------------
+
+```{r, echo = FALSE, eval = TRUE}
+df.tv <- transform(df.sub,
+                   start = ifelse(timeBound, start, paste0(format(Sys.Date(), '%Y'), '-01-01')),
+                   end = ifelse(timeBound, end, paste0(format(Sys.Date(), '%Y'), '-12-31')))
+df.tv$maingoal_ref <- apply(df.tv, 1, function(x) match(x['refMain'], unique(df.sub$refMain)))
+l.suborder <- setNames(lapply(unique(df.sub$refMain), function(x) df.sub[df.sub$refMain == x, 'refSub']), unique(df.sub$refMain))
+df.tv$subgoal_ref <- apply(df.tv, 1, function(x) match(as.numeric(x['refSub']), l.suborder[[x['refMain']]]))
+df.tv$group <- paste0('Goal ', df.tv$maingoal_ref)
+df.tv$content <- paste0('SubGoal ', df.tv$maingoal_ref, '.', df.tv$subgoal_ref)
+df.tv$title <- df.tv$name
+
+df.tvGroups <- data.frame(id = unique(df.tv$group), content = unique(df.tv$group))
+
+timevis(data = df.tv, groups = df.tvGroups, showZoom = FALSE, width = '1000px')
+
+```
 
 
 ```{r, echo = FALSE, eval = TRUE}
