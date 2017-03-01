@@ -10,6 +10,7 @@ output:
 ```{r setup, include=FALSE}
 library(flexdashboard)
 library(DBI)
+library(knitr)
 library(dplyr)
 library(htmltools)
 ```
@@ -33,21 +34,26 @@ sumOut <- lapply(seq(nrow(df.main)), function(i) {
   df.subForMain <- df.sub %>% filter(refMain == df.main[i, 'refMain'])
   goals <- list(
     ## Heading
-    knitr::knit_expand(text = "Row {data-height=55}"),
-    knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
-    knitr::knit_expand(text = sprintf("\n```{r mainheader_%s}\n", df.main[i, 'refMain'])), # start r chunk
-    knitr::knit_expand(text = sprintf("p(span(\"%s\", style = \"font-size: 130%%; color: blue;\"), br(), span(\"%s\", style = \"font-size: 85%%;\"))", df.main[i, 'name'], df.main[i, 'notes'])),
-    knitr::knit_expand(text = "\n```\n"), # end r chunk
+    knit_expand(text = "Row {data-height=55}"),
+    knit_expand(text = "-----------------------------\n\n"), # New Row
+    knit_expand(text = sprintf("\n```{r mainheader_%s}\n", df.main[i, 'refMain'])), # start r chunk
+    knit_expand(text = sprintf("p(span(\"%s\", style = \"font-size: 130%%; color: blue;\"), br(), span(\"%s\", style = \"font-size: 85%%;\"))", df.main[i, 'name'], df.main[i, 'notes'])),
+    knit_expand(text = "\n```\n"), # end r chunk
 
     ## Gauges
-    knitr::knit_expand(text = "Row {data-height=150}"),
-    knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
+    knit_expand(text = "Row {data-height=150}"),
+    knit_expand(text = "-----------------------------\n\n"), # New Row
     sapply(seq(nrow(df.subForMain)), function(j){
+      if(is.na(df.subForMain[j, 'tags'])) {
+        myTags <- ''
+      } else {
+        myTags <- paste0(sapply(unlist(strsplit(df.subForMain[j, 'tags'], ';')), function(t) sprintf('<span class=\"label label-%s\">%s</span>', t, toupper(substr(t, 1, 1)))), collapse = ' ')
+      }
       list(
-        knitr::knit_expand(text = sprintf("### SUBGOAL %s", j)), # Sub-goal gauge header
-        knitr::knit_expand(text = sprintf("\n```{r mainsubgoal_%s_%sB}\n", df.subForMain[j, 'refMain'], df.subForMain[j, 'refSub'])), # start r chunk
-        knitr::knit_expand(text = sprintf("div(gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39))), class = \"tooltipX\", span(class = \"tooltiptextX\", \"%s\"))", df.subForMain[j, 'percentComplete'], df.subForMain[j, 'name'])), # Gauge showing progress
-        knitr::knit_expand(text = "\n```\n") # end r chunk
+        knit_expand(text = sprintf("### SUBGOAL %s %s", j, myTags)), # Sub-goal gauge header
+        knit_expand(text = sprintf("\n```{r mainsubgoal_%s_%sB}\n", df.subForMain[j, 'refMain'], df.subForMain[j, 'refSub'])), # start r chunk
+        knit_expand(text = sprintf("div(gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39))), class = \"tooltipX\", span(class = \"tooltiptextX\", \"%s\"))", df.subForMain[j, 'percentComplete'], df.subForMain[j, 'name'])), # Gauge showing progress
+        knit_expand(text = "\n```\n") # end r chunk
       )
     })
   )
@@ -56,7 +62,7 @@ sumOut <- lapply(seq(nrow(df.main)), function(i) {
 
 ```
 
-`r knitr::knit(text = paste(sumOut, collapse = '\n'))`
+`r knit(text = paste(sumOut, collapse = '\n'))`
 
 
 ```{r, echo = FALSE, eval = TRUE}
@@ -74,27 +80,27 @@ expandSub <- function(d) {
 
   lapply(seq(nrow(d)), function(i) {
     list(
-      knitr::knit_expand(text = "Row"),
-      knitr::knit_expand(text = "-----------------------------\n\n"), # New Row
-      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal textbox header
-      knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sA}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = sprintf("p(\"%s\", class=\"goal-header\")\n", d[i, 'name'])), # Sub-goal Name
-      knitr::knit_expand(text = sprintf("h5(\"%s\")\n", d[i, 'notes'])), # Sub-goal Notes
+      knit_expand(text = "Row"),
+      knit_expand(text = "-----------------------------\n\n"), # New Row
+      knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal textbox header
+      knit_expand(text = sprintf("\n```{r subgoal_%s_%sA}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
+      knit_expand(text = sprintf("p(\"%s\", class=\"goal-header\")\n", d[i, 'name'])), # Sub-goal Name
+      knit_expand(text = sprintf("h5(\"%s\")\n", d[i, 'notes'])), # Sub-goal Notes
       ifelse(
         is.na(d[i, 'tags']),
-        knitr::knit_expand(text = ''),
-        sapply(strsplit(d[i, 'tags'], ';'), function(t) knitr::knit_expand(text = sprintf("a(class = \"label label-%s\", \"%s\")", t, t)))
+        knit_expand(text = ''),
+        sapply(strsplit(d[i, 'tags'], ';'), function(t) knit_expand(text = sprintf("a(class = \"label label-%s\", \"%s\")", t, t)))
       ),
-      knitr::knit_expand(text = "\n```\n"), # end r chunk
-      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
-      knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = ifelse(d[i, 'timeBound'], sprintf("valueBox(caption = '%s<br>%s', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor']),
+      knit_expand(text = "\n```\n"), # end r chunk
+      knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal valuebox header
+      knit_expand(text = sprintf("\n```{r subgoal_%s_%sB}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
+      knit_expand(text = ifelse(d[i, 'timeBound'], sprintf("valueBox(caption = '%s<br>%s', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'start'], d[i, 'end'], d[i, 'status'], d[i, 'valColor']),
                          sprintf("valueBox(caption = ' ', value = '%s', icon = 'fa-calendar', color = '%s')", d[i, 'status'], d[i, 'valColor']))), # Valuebox
-      knitr::knit_expand(text = "\n```\n"), # end r chunk
-      knitr::knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
-      knitr::knit_expand(text = sprintf("\n```{r subgoal_%s_%sC}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
-      knitr::knit_expand(text = sprintf("gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))", d[i, 'percentComplete'])), # Goal Name
-      knitr::knit_expand(text = "\n```\n") # end r chunk
+      knit_expand(text = "\n```\n"), # end r chunk
+      knit_expand(text = sprintf("### SUBGOAL %s", i)), # Sub-goal gauge header
+      knit_expand(text = sprintf("\n```{r subgoal_%s_%sC}\n", d[i, 'refMain'], d[i, 'refSub'])), # start r chunk
+      knit_expand(text = sprintf("gauge(%s, min = 0, max = 100, symbol = '%%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))", d[i, 'percentComplete'])), # Goal Name
+      knit_expand(text = "\n```\n") # end r chunk
     )
   })
 }
@@ -102,11 +108,11 @@ expandSub <- function(d) {
 out <- lapply(seq(nrow(df.main)), function(i) {
   
   cont <- list(
-    knitr::knit_expand(text = sprintf("GOAL %s", i)), # New Page
-    knitr::knit_expand(text = "============================\n\n"), # New Page
-    knitr::knit_expand(text = sprintf("\n```{r maingoal_%s}\n", df.main[i, 'refMain'])), # start r chunk
-    knitr::knit_expand(text = sprintf("h4(\"Name: %s\")\n", df.main[i, 'name'])), # Goal Name
-    knitr::knit_expand(text = "\n```\n"), # end r chunk
+    knit_expand(text = sprintf("GOAL %s", i)), # New Page
+    knit_expand(text = "============================\n\n"), # New Page
+    knit_expand(text = sprintf("\n```{r maingoal_%s}\n", df.main[i, 'refMain'])), # start r chunk
+    knit_expand(text = sprintf("h4(\"Name: %s\")\n", df.main[i, 'name'])), # Goal Name
+    knit_expand(text = "\n```\n"), # end r chunk
     unlist(expandSub(df.sub %>% filter(refMain == df.main[i, 'refMain'])))
   )
   paste(unlist(cont), collapse = '\n') # collapse together all lines with newline separator
@@ -115,4 +121,4 @@ out <- lapply(seq(nrow(df.main)), function(i) {
 
 ```
 
-`r knitr::knit(text = paste(unlist(out), collapse = '\n'))`
+`r knit(text = paste(unlist(out), collapse = '\n'))`
