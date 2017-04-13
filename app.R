@@ -11,14 +11,19 @@ library(pool)
 library(dplyr)
 library(DT)
 
-mysql.settingsfile <- './mysql.cnf'
 
+## Use this code when working with a mysql database
+mysql.settingsfile <- './mysql.cnf'
 pool <- dbPool(
   drv = RMySQL::MySQL(),
   default.file=mysql.settingsfile
-  # drv = RSQLite::SQLite(),
-  # dbname = "goals.sqlite"
 )
+
+## Use this code when working with a local sqlite database
+# pool <- dbPool(
+#   drv = RSQLite::SQLite(),
+#   dbname = "goals.sqlite"
+# )
 
 ## Check tables exist in database
 addMainTable <- !'maingoals' %in% dbListTables(pool)
