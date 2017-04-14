@@ -20,6 +20,8 @@ The flexdashboard provides a tabbed view of the database.  The Summary tab displ
 
 I use this to track my work-related goals via RStudio Connect.  Both the shiny app and  flexdashboard markdown reside on RStudio Connect and connect to a database residing on an external server (*libmysqlclient* must be installed on the server running RStudio Connect).  Working in this way, I can run a daily update of the flexdashboard to display any progress or changes made to the goals - it becomes almost realtime tracking.  Unfortunately much of our systems are locked down but there's no reason why the database could not be updated via email using an agent such as procmail.
 
+![](./images/dash1.png)
+
 ## Limitations
 
 Currently this is limited to a single user but it could easily be adapted to allow multiple users simply by adding an additional database field along with some authentication.
