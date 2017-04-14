@@ -11,25 +11,34 @@ library(pool)
 library(dplyr)
 library(DT)
 
+
+## Use this code when working with a mysql database
+# mysql.settingsfile <- './mysql.cnf'
+# pool <- dbPool(
+#   drv = RMySQL::MySQL(),
+#   default.file=mysql.settingsfile
+# )
+
+## Use this code when working with a local sqlite database
 pool <- dbPool(
   drv = RSQLite::SQLite(),
   dbname = "goals.sqlite"
 )
 
 ## Check tables exist in database
-addMainTable <- !'mainGoals' %in% dbListTables(pool)
-addSubTable <- !'subGoals' %in% dbListTables(pool)
+addMainTable <- !'maingoals' %in% dbListTables(pool)
+addSubTable <- !'subgoals' %in% dbListTables(pool)
 if (any(addMainTable, addSubTable)) {
   conn <- poolCheckout(pool)
-  if(addMainTable) dbSendQuery(conn, 'CREATE TABLE mainGoals (refMain INTEGER, name TEXT, notes TEXT)')
-  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subGoals (refSub INTEGER, refMain INTEGER, name TEXT, timeBound INTEGER, start TEXT, end TEXT, percentComplete INTEGER, tags TEXT, notes TEXT)')
+  if(addMainTable) dbSendQuery(conn, 'CREATE TABLE maingoals (refMain INTEGER, name TEXT, notes TEXT)')
+  if(addSubTable) dbSendQuery(conn, 'CREATE TABLE subgoals (refSub INTEGER, refMain INTEGER, name TEXT, timeBound INTEGER, start TEXT, end TEXT, percentComplete INTEGER, tags TEXT, notes TEXT)')
   poolReturn(conn)
   
 }
 
 ## Connect to database and read in tables
-df.main <- dbReadTable(pool, 'mainGoals')
-df.sub <- dbReadTable(pool, 'subGoals')
+df.main <- dbReadTable(pool, 'maingoals')
+df.sub <- dbReadTable(pool, 'subgoals')
 
 server <- function(input, output, session) {
 
@@ -338,8 +347,8 @@ server <- function(input, output, session) {
   session$onSessionEnded(function() {
     observe({
       isolate({
-        dbWriteTable(pool, 'mainGoals', goals$main, overwrite = TRUE)
-        dbWriteTable(pool, 'subGoals', goals$sub, overwrite = TRUE)
+        dbWriteTable(pool, 'maingoals', goals$main, overwrite = TRUE)
+        dbWriteTable(pool, 'subgoals', goals$sub, overwrite = TRUE)
         poolClose(pool)
       })
     })
